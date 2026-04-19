@@ -1,6 +1,6 @@
 # Code Snippet Manager
 
-A web application to create, organize, search, and share reusable code snippets with syntax highlighting and tag-based filtering.
+A full-stack web application to create, organize, search, and share reusable code snippets with syntax highlighting and tag-based filtering.
 
 ## Features
 
@@ -8,14 +8,14 @@ A web application to create, organize, search, and share reusable code snippets 
 - Tag snippets for easy categorization and filtering
 - Full-text search across snippet titles, descriptions, and code
 - Copy-to-clipboard with a single click
-- User authentication and personal snippet collections
+- User authentication (register/login) with JWT and personal snippet collections
 
 ## Tech Stack
 
-- **Frontend**: React 18, Vite
-- **Backend**: Node.js 20, Express 5
+- **Frontend**: React 18, Vite 5
+- **Backend**: Node.js 20, Express 5 (ESM)
 - **Database**: PostgreSQL 16
-- **Auth**: JWT (jsonwebtoken v9)
+- **Auth**: JWT (jsonwebtoken v9), bcryptjs
 
 ## Prerequisites
 
@@ -39,53 +39,99 @@ cp .env.example .env
 # Run database migrations
 npm run db:migrate
 
-# Start development server
+# Start development server (runs client + server concurrently)
 npm run dev
 ```
 
-The app will be available at `http://localhost:5173`.
+- Frontend: `http://localhost:5173`
+- Backend API: `http://localhost:3000`
 
 ## Environment Variables
 
-| Variable       | Description                  |
-|----------------|------------------------------|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `JWT_SECRET`   | Secret key for JWT signing   |
-| `PORT`         | Server port (default: 3000)  |
+| Variable       | Description                              |
+|----------------|------------------------------------------|
+| `DATABASE_URL` | PostgreSQL connection string             |
+| `JWT_SECRET`   | Secret key for JWT signing               |
+| `PORT`         | Server port (default: 3000)              |
 
 ## Scripts
 
-| Command           | Description                    |
-|-------------------|--------------------------------|
-| `npm run dev`     | Start dev server with hot reload |
-| `npm run build`   | Build for production           |
-| `npm run start`   | Start production server        |
-| `npm run db:migrate` | Run database migrations     |
-| `npm test`        | Run test suite                 |
+| Command              | Description                          |
+|----------------------|--------------------------------------|
+| `npm run dev`        | Start client + server with hot reload |
+| `npm run dev:server` | Start only the backend               |
+| `npm run dev:client` | Start only the frontend              |
+| `npm run build`      | Build frontend for production        |
+| `npm run start`      | Start production server              |
+| `npm run db:migrate` | Run database migrations              |
+| `npm test`           | Run test suite                       |
 
 ## Project Structure
 
 ```
 Code_Snippet_Manager/
-├── client/          # React frontend
-├── server/          # Express backend
-│   ├── routes/      # API route handlers
-│   ├── models/      # Database models
-│   └── middleware/  # Auth & validation middleware
-├── migrations/      # Database migration files
-└── .env.example     # Environment variable template
+├── client/                  # React frontend (Vite)
+│   ├── index.html
+│   └── src/
+│       ├── main.jsx         # React entry point
+│       ├── App.jsx          # Root component
+│       ├── api/
+│       │   └── snippets.js  # API client (fetch wrapper)
+│       └── components/
+│           ├── AuthForm.jsx     # Login / Register form
+│           ├── SnippetCard.jsx  # Snippet display + copy/delete
+│           └── SnippetForm.jsx  # Create snippet form
+├── server/                  # Express backend
+│   ├── index.js             # Server entry point
+│   ├── db.js                # PostgreSQL connection pool
+│   ├── routes/
+│   │   ├── snippets.js      # Snippet CRUD routes
+│   │   └── auth.js          # Register / Login routes
+│   ├── models/
+│   │   ├── snippet.js       # Snippet DB queries
+│   │   └── user.js          # User DB queries
+│   └── middleware/
+│       ├── auth.js          # JWT verification middleware
+│       └── validate.js      # Request validation middleware
+├── migrations/
+│   ├── 001_init.sql         # Initial schema (users + snippets)
+│   └── migrate.js           # Migration runner
+├── vite.config.js           # Vite config with API proxy
+├── .env.example             # Environment variable template
+└── package.json
 ```
 
 ## API Endpoints
 
-| Method | Endpoint              | Description              |
-|--------|-----------------------|--------------------------|
-| GET    | `/api/snippets`       | List all snippets        |
-| POST   | `/api/snippets`       | Create a new snippet     |
-| GET    | `/api/snippets/:id`   | Get a snippet by ID      |
-| PUT    | `/api/snippets/:id`   | Update a snippet         |
-| DELETE | `/api/snippets/:id`   | Delete a snippet         |
-| GET    | `/api/snippets/search?q=` | Search snippets     |
+### Auth
+
+| Method | Endpoint              | Description         |
+|--------|-----------------------|---------------------|
+| POST   | `/api/auth/register`  | Register a new user |
+| POST   | `/api/auth/login`     | Login and get token |
+
+### Snippets (require `Authorization: Bearer <token>`)
+
+| Method | Endpoint                   | Description          |
+|--------|----------------------------|----------------------|
+| GET    | `/api/snippets`            | List all snippets    |
+| POST   | `/api/snippets`            | Create a new snippet |
+| GET    | `/api/snippets/:id`        | Get a snippet by ID  |
+| PUT    | `/api/snippets/:id`        | Update a snippet     |
+| DELETE | `/api/snippets/:id`        | Delete a snippet     |
+| GET    | `/api/snippets/search?q=`  | Search snippets      |
+
+### Snippet Payload
+
+```json
+{
+  "title": "Debounce function",
+  "description": "Delays function execution",
+  "code": "const debounce = (fn, ms) => ...",
+  "language": "javascript",
+  "tags": ["utility", "performance"]
+}
+```
 
 ## Contributing
 
